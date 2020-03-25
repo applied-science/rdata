@@ -49,26 +49,3 @@
       (is (= (first (:age linelist)) 68))
       (is (= (last (:age linelist)) 33)))))
 
-
-(def mers
-  (read-rdata "test/data/mers_korea_2015.RData" {:key-fn keyword}))
-
-(keys mers)
-;;=> (:mers_korea_2015)
-
-(-> mers :mers_korea_2015 keys)
-;;=> (:linelist :contacts)
-
-(-> mers :mers_korea_2015 :linelist keys)
-;;=> (:id :age :age_class :sex :place_infect :reporting_ctry :loc_hosp :dt_onset :dt_report :week_report :dt_start_exp :dt_end_exp :dt_diag :outcome :dt_death)
-
-(-> mers :mers_korea_2015 :linelist :place_infect)
-[1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2]
-
-;; hm, place 1 or place 2? Maybe the metadata can tell us what this means...
-(-> mers :mers_korea_2015 :linelist :place_infect meta)
-;;=> {:class ["factor"], :levels ["Middle East" "Outside Middle East"]}
-
-;; Ah, it's a two value factor (not that R values start from 1, so one
-;; must `dec` the factor's index to look it up in the vector held in
-;; the meta.

@@ -44,7 +44,7 @@ translation of that value as Clojure `metadata`.
 (-> mers :mers_korea_2015 :linelist :place_infect meta)
 ;;=> {:class ["factor"], :levels ["Middle East" "Outside Middle East"]}
 
-;; Ah, it's a two value factor (not that R values start from 1, so one
+;; Ah, it's a two value factor (note that R values start from 1, so one
 ;; must decrement the factor's index to look it up in the vector held in
 ;; the meta.
 ```
