@@ -3,6 +3,7 @@
              "clojars" {:url "https://clojars.org/repo"}
              "bedatadriven" {:url "https://nexus.bedatadriven.com/content/groups/public/"}}
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        org.apache.commons/commons-compress {:mvn/version "1.20"}        
         org.renjin/renjin-script-engine {:mvn/version "3.5-beta43"}}
  :aliases
  {:test {:extra-paths ["test"]

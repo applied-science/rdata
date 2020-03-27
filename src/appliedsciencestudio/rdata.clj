@@ -1,5 +1,6 @@
 (ns appliedsciencestudio.rdata
-  (:import (org.renjin.primitives.io.serialization RDataReader)))
+  (:import (org.apache.commons.compress.compressors.bzip2 BZip2CompressorInputStream)
+           (org.renjin.primitives.io.serialization RDataReader)))
 
 (defn r-date-to-java-date
   "The RData format returns dates as Doubles (!). This function massages
@@ -57,6 +58,22 @@
     (class sexp))) ; emit classname if an unmapped class shows up
 ;; TODO  org.renjin.primitives.vector.RowNamesVector
 
+(defn open-with-wrapper
+  "RData files can be compressed with GZip or bz. This function takes
+  `filename` and returns an `InputStream` wrapped with the appropriate
+  stream decompressor (which might be none at all)."
+  [filename]
+  (let [istream (doto (clojure.java.io/input-stream filename)
+                  (.mark 4)) ; mark so we can reset the stream after reading the header
+        bzh-header (mapv int [\B \Z \h])
+        gzip-header [31 139]
+        header (into [] (repeatedly 3 #(.read istream)))] 
+    (.reset istream) ; "unread" the three byte header    
+    (cond (= bzh-header header) (BZip2CompressorInputStream. istream)
+          (and (= (header 0) (gzip-header 0))
+               (= (header 1) (gzip-header 1))) (java.util.zip.GZIPInputStream. istream)
+          :else istream)))
+
 (defn read-rdata
   "Read an RData formatted file into nested clojure data structures. NB
   I've used Clojure's metadata feature to store the attributes from
@@ -67,8 +84,8 @@
   ([filename] (read-rdata filename {}))  
   ([filename {:keys [key-fn]
               :or {key-fn identity}}]
-   (->> (with-open [gis (java.util.zip.GZIPInputStream. (clojure.java.io/input-stream filename))]
-         (.readFile (org.renjin.primitives.io.serialization.RDataReader. gis)))
+   (->> (with-open [is (open-with-wrapper filename)]
+         (.readFile (org.renjin.primitives.io.serialization.RDataReader. is)))
         (clojurize-sexp key-fn))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -132,28 +149,12 @@ text=<missing_arg>")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; input stream wrapper to gracefully handled ZIP and BZ files
 
-;; public static InputStream decompress(File file) throws IOException {
-;;     int b1;
-;;     int b2;
-;;     int b3;
-;;     try(FileInputStream in = new FileInputStream(file)) {
-;;       b1 = in.read();
-;;       b2 = in.read();
-;;       b3 = in.read();
-;;     }
-;;     if(b1 == GzFileConnection.GZIP_MAGIC_BYTE1 && b2 == GzFileConnection.GZIP_MAGIC_BYTE2) {
-;;       return new GZIPInputStream(new FileInputStream(file));
+;; TODO add support for this compression method?
 ;;     } else if(b1 == 0xFD && b2 == '7') {
 ;;       // See http://tukaani.org/xz/xz-javadoc/org/tukaani/xz/XZInputStream.html
 ;;       // Set a memory limit of 64mb, if this is not sufficient, it will throw
 ;;       // an exception rather than an OutOfMemoryError, which will terminate the JVM
 ;;       return new XZInputStream(new FileInputStream(file), 64 * 1024 * 1024);
-;;     } else if (b1 == 'B' && b2 == 'Z' && b3 == 'h' ) {
-;;       return new BZip2CompressorInputStream(new FileInputStream(file));
-;;     } else {
-;;       return new FileInputStream(file);
-;;     }
-;;   }
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; leftovers
