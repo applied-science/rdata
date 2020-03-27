@@ -12,44 +12,48 @@
 
 (defn attributes->metadata
   "Retrieve the attributes from an R object and return them as a Clojure map."
-  [key-fn sexp]
+  [key-fn serializer sexp]
   (let [pair-list (.asPairList (.getAttributes sexp))]
     (if (= (class pair-list) org.renjin.sexp.Null)
       {}
-      (into {} (map #(vector (key-fn %1) (clojurize-sexp key-fn %2))
+      (into {} (map #(vector (key-fn %1) (clojurize-sexp key-fn serializer %2))
                     (.getNames pair-list)
                     (.values pair-list))))))
 
 (defn clojurize-vector
   "Convert an R vector into a clojure vector, preserving the attributes
   as clojure metadata on the vector."
-  [key-fn sexp]
-  (let [the-meta (attributes->metadata key-fn sexp)]
+  [key-fn serializer sexp]
+  (let [the-meta (attributes->metadata key-fn serializer sexp)]
     (with-meta
       (mapv (if (= ["Date"] (get the-meta (key-fn "class")))
               r-date-to-java-date
-              (partial clojurize-sexp key-fn))
+              (partial clojurize-sexp key-fn serializer))
             sexp)
       the-meta)))
   
 (defn clojurize-sexp
   "Recursively unpack a nested set of R sexps into a clojure
   representation."
-  [key-fn sexp]
+  [key-fn serializer sexp]
   (condp = (class sexp)
     org.renjin.sexp.PairList$Node (apply array-map
-                                         (mapcat #(vector (key-fn %1) (clojurize-sexp key-fn %2))
+                                         (mapcat #(vector (key-fn (if (= "" %1) (str "appliedsciencestudio.rdata/unnamed-"(serializer)) %1))
+                                                          (clojurize-sexp key-fn serializer %2))
                                               (.getNames sexp)
                                               (.values sexp)))
     org.renjin.sexp.ListVector  (with-meta
-                                  (apply array-map
-                                         (mapcat #(vector (key-fn %) (clojurize-sexp key-fn (.get sexp (str %))))
-                                              (.getNames sexp)))
-                                  (attributes->metadata key-fn sexp))
-    org.renjin.sexp.IntArrayVector (clojurize-vector key-fn sexp)
-    org.renjin.sexp.IntBufferVector (clojurize-vector key-fn sexp)
-    org.renjin.sexp.DoubleArrayVector (clojurize-vector key-fn sexp)
-    org.renjin.sexp.StringArrayVector (clojurize-vector key-fn sexp)
+                                  (if (= (class (.getNames sexp)) org.renjin.sexp.Null)
+                                    {}
+                                    (apply array-map                                           
+                                           (mapcat #(vector (key-fn (if (= "" %) (str "appliedsciencestudio.rdata/unnamed-"(serializer)) %))
+                                                            (clojurize-sexp key-fn serializer (.get sexp (str %))))
+                                                   (.getNames sexp))))
+                                  (attributes->metadata key-fn serializer sexp))
+    org.renjin.sexp.IntArrayVector (clojurize-vector key-fn serializer sexp)
+    org.renjin.sexp.IntBufferVector (clojurize-vector key-fn serializer sexp)
+    org.renjin.sexp.DoubleArrayVector (clojurize-vector key-fn serializer sexp)
+    org.renjin.sexp.StringArrayVector (clojurize-vector key-fn serializer sexp)
     org.renjin.primitives.io.serialization.StringByteArrayVector (mapv identity sexp) ; XXX
     ;; primitive type leaf nodes
     java.lang.Double sexp      
@@ -74,6 +78,19 @@
                (= (header 1) (gzip-header 1))) (java.util.zip.GZIPInputStream. istream)
           :else istream)))
 
+(defn read-rdata-raw
+  "Read `filename` into Renjin's internal representation. Mostly useful for debugging."
+  [filename]
+  (with-open [is (open-with-wrapper filename)]
+    (.readFile (org.renjin.primitives.io.serialization.RDataReader. is))))
+
+(defn make-serializer
+  "Produces a thread-local counter that increments every time it is
+  called. This is used in this code to generate serial names."
+  []
+  (let [a (atom 0)]
+    (fn [] (swap! a inc))))
+
 (defn read-rdata
   "Read an RData formatted file into nested clojure data structures. NB
   I've used Clojure's metadata feature to store the attributes from
@@ -84,9 +101,8 @@
   ([filename] (read-rdata filename {}))  
   ([filename {:keys [key-fn]
               :or {key-fn identity}}]
-   (->> (with-open [is (open-with-wrapper filename)]
-         (.readFile (org.renjin.primitives.io.serialization.RDataReader. is)))
-        (clojurize-sexp key-fn))))
+   (->> (read-rdata-raw filename)
+        (clojurize-sexp key-fn (make-serializer)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; experimental CSV support -- here there be dragons!
