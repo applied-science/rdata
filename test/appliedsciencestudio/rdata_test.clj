@@ -81,8 +81,21 @@
               :IsleofDogs1 ["#9986A5" "#79402E" "#CCBA72" "#0F0D0E" "#D9D0D3" "#8D8680"],
               :IsleofDogs2 ["#EAD3BF" "#AA9486" "#B6854D" "#39312F" "#1C1718"]})))))
 
-;; RDX3 instead of RDX2
-;; (read-rdata "test/data/totest.rda"  {:key-fn keyword})
+;; courtesy of @generateme :)
+(deftest unnamed-test
+  (testing "Load some data containing unnamed pairs, converting keys to keywords"
+    (is (= (read-rdata "test/data/totest.rda" {:key-fn keyword})
+           {:partiallyNamedList
+            {:appliedsciencestudio.rdata/unnamed-1 ["noname"],
+             :n ["withname"],
+             :appliedsciencestudio.rdata/unnamed-2 ["noname"],
+             :appliedsciencestudio.rdata/unnamed-3 ["noname"],
+             :a [1.0],
+             :b [2.0],
+             :c [3.0]},
+            :matrixRowAndColumnNames [1 2 3 4 5 6]}))))
+
+
 
 
 
