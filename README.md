@@ -33,6 +33,14 @@ depend on non-standard repositories, you must have the key/value pair
             "bedatadriven" {:url "https://nexus.bedatadriven.com/content/groups/public/"}
 ```
 
+You can also build a deployable jar of this library:
+
+    $ clojure -A:jar
+
+or install it locally:
+
+    $ clojure -A:install
+
 
 ## Usage
 
