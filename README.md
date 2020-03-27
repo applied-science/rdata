@@ -33,6 +33,10 @@ depend on non-standard repositories, you must have the key/value pair
             "bedatadriven" {:url "https://nexus.bedatadriven.com/content/groups/public/"}
 ```
 
+Run the tests:
+
+    clj -A:test:runner
+
 You can also build a deployable jar of this library:
 
     $ clojure -A:jar
