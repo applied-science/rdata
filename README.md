@@ -9,6 +9,31 @@ format in Clojure.
 One might want to do this because they have found an interesting
 dataset that has been published in this format.
 
+
+## Installation
+
+We have not yet released to clojars, so the recommended installation is with deps.edn:
+
+For deps.edn users:
+
+``` clojure
+appliedsciencestudio/rdata {:git/url "https://github.com/appliedsciencestudio/rdata/"
+                            :sha "6dff85aa7b83a9ce85eb8d70b0672a3adf0dc7f2"}
+```
+
+Because of a `deps.edn` issue with transitive dependencies which
+depend on non-standard repositories, you must have the key/value pair
+`"bedatadriven" {:url
+"https://nexus.bedatadriven.com/content/groups/public/"` in the
+`:mvn/repos` of your `deps.edn` file. For instance:
+
+``` clojure
+:mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+            "clojars" {:url "https://clojars.org/repo"}
+            "bedatadriven" {:url "https://nexus.bedatadriven.com/content/groups/public/"}
+```
+
+
 ## Usage
 
 This library exports a single useful function, `read-rdata`, which --
@@ -49,19 +74,6 @@ translation of that value as Clojure `metadata`.
 ;; the meta.
 ```
 
-## Development
-
-Build a deployable jar of this library:
-
-    $ clojure -A:jar
-
-Install it locally:
-
-    $ clojure -A:install
-
-Deploy it to Clojars -- needs `CLOJARS_USERNAME` and `CLOJARS_PASSWORD` environment variables:
-
-    $ clojure -A:deploy
 
 ## License
 
