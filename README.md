@@ -18,7 +18,7 @@ For deps.edn users:
 
 ``` clojure
 appliedsciencestudio/rdata {:git/url "https://github.com/appliedsciencestudio/rdata/"
-                            :sha "6dff85aa7b83a9ce85eb8d70b0672a3adf0dc7f2"}
+                            :sha "151e6dead06b38995f1f30b09d954a060f7a2a9c"}
 ```
 
 Because of a `deps.edn` issue with transitive dependencies which
