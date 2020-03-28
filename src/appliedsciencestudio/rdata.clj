@@ -55,6 +55,7 @@
     org.renjin.sexp.DoubleArrayVector (clojurize-vector key-fn serializer sexp)
     org.renjin.sexp.StringArrayVector (clojurize-vector key-fn serializer sexp)
     org.renjin.primitives.io.serialization.StringByteArrayVector (mapv identity sexp) ; XXX
+    org.renjin.primitives.sequence.IntSequence (mapv identity sexp) ; XXX
     ;; primitive type leaf nodes
     java.lang.Double sexp      
     java.lang.String sexp
@@ -171,13 +172,3 @@ text=<missing_arg>")
 ;;       // Set a memory limit of 64mb, if this is not sufficient, it will throw
 ;;       // an exception rather than an OutOfMemoryError, which will terminate the JVM
 ;;       return new XZInputStream(new FileInputStream(file), 64 * 1024 * 1024);
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; leftovers
-
-;; (def script-engine
-;;   (.getScriptEngine (org.renjin.script.RenjinScriptEngineFactory.)))
-
-;;(.eval script-engine (str "utils::read.csv(file=\"resources/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv\", header=TRUE)"))
-;;(.eval script-engine (str "utils::read.csv(file='resources/deutschland.state-population.tsv', header=TRUE, sep='\\t')"))
-;;(.eval script-engine "library(readr)")
