@@ -14,7 +14,24 @@
   (clojurize-sexp key-fn (make-serializer) sexp))
 
 (deftest simple-tests
+  ;; originally taking ideas from https://scicloj.github.io/clojisr/resources/public/clojisr/v1/tutorial-test/index.html#more-data-conversion-examples
   (testing "Generate some data using R, then convert it to clojure structures."
+    (testing "named list"
+      (is (= (r->clj identity (eval-r "list(a=1,b=c(10,20),c='hi!')"))
+             {"a" [1.0],
+              "b" [10.0 20.0],
+              "c" ["hi!"]})))
+    (testing "booleans"
+      (is (= (r->clj identity (eval-r "TRUE"))
+             [true]))
+      (is (= (r->clj identity (eval-r "FALSE"))
+             [false]))
+      (is (= (r->clj identity (eval-r "NA"))
+             ;; XXX
+             [nil])))
+    #_ (testing "null/nil"
+         (is (= (r->clj keyword (eval-r "NULL"))
+                nil)))
     (is (= (r->clj identity (eval-r "c(10,20,30)"))
            [10.0 20.0 30.0]))
     (is (= (r->clj identity (eval-r "list(A=1,B=2,'#123strange ()'=3)"))
