@@ -54,6 +54,11 @@
     org.renjin.sexp.IntBufferVector (clojurize-vector key-fn serializer sexp)
     org.renjin.sexp.DoubleArrayVector (clojurize-vector key-fn serializer sexp)
     org.renjin.sexp.StringArrayVector (clojurize-vector key-fn serializer sexp)
+    org.renjin.sexp.LogicalArrayVector (clojurize-vector key-fn serializer sexp) ;; XXX
+    org.renjin.sexp.Logical (case (.toString sexp) ;; (.toBooleanStrict sexp)
+                              "TRUE" true
+                              "FALSE" false
+                              "NA" nil)
     org.renjin.primitives.io.serialization.StringByteArrayVector (mapv identity sexp) ; XXX
     org.renjin.primitives.sequence.IntSequence (mapv identity sexp) ; XXX
     ;; primitive type leaf nodes
