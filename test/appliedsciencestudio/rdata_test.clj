@@ -1,9 +1,49 @@
 (ns appliedsciencestudio.rdata-test
   (:require [clojure.test :refer :all]
-            [appliedsciencestudio.rdata :refer :all]))
+            [appliedsciencestudio.rdata :refer [read-rdata make-serializer clojurize-sexp]]))
 
-;; these test datasets were taken from https://github.com/reconhub/outbreaks
+(def eval-r
+  "An instance of the Renjin script engine, which we will use to generate test data."
+  (let [engine (.getScriptEngine (org.renjin.script.RenjinScriptEngineFactory.))]
+    (fn [script]
+      (.eval engine script))))
 
+(defn r->clj
+  "A helper function to convert R data to clj w/ keyword keys."
+  [key-fn sexp]
+  (clojurize-sexp key-fn (make-serializer) sexp))
+
+(deftest simple-tests
+  (testing "Generate some data using R, then convert it to clojure structures."
+    (is (= (r->clj identity (eval-r "c(10,20,30)"))
+           [10.0 20.0 30.0]))
+    (is (= (r->clj identity (eval-r "list(A=1,B=2,'#123strange ()'=3)"))
+           {"A" [1.0], "B" [2.0], "#123strange ()" [3.0]}))
+    (is (= (r->clj keyword (eval-r "list(a=1:10,b='hi!')"))
+           {:a [1 2 3 4 5 6 7 8 9 10], :b ["hi!"]}))
+    (is (= (r->clj keyword (eval-r "list(a=1,b=c(10,20),c='hi!')"))
+           {:a [1.0], :b [10.0 20.0], :c ["hi!"]}))))
+
+;; (r->clj (eval-r "table(c('a','b','a','b','a','b','a','b'), c(1,1,2,2,3,3,1,1))"))
+
+;; In R this is:
+;;   1 2 3
+;; a 2 1 1
+;; b 2 1 1
+;; ... but rdata currently returns:
+;; => [2 2 1 1 1 1]
+;;... with this meta:
+;; {:class ["table"], :dim [2 3], :dimnames #:appliedsciencestudio.rdata{:unnamed-1 ["a" "b"], :unnamed-2 ["a" "b"]}}
+
+;; clojisr gives this, which I'm not sure is what I'd want:
+;; {["1" "a"] 2,
+;;  ["1" "b"] 2,
+;;  ["2" "a"] 1,
+;;  ["2" "b"] 1,
+;;  ["3" "a"] 1,
+;;  ["3" "b"] 1}
+
+;; these first datasets were taken from https://github.com/reconhub/outbreaks
 (deftest sars-test
   (testing "Load some demo data from the SARS 2003 dataset, access it using the string keys provided by R."
     (let [data (read-rdata "test/data/sars_canada_2003.RData" )
@@ -94,8 +134,3 @@
              :b [2.0],
              :c [3.0]},
             :matrixRowAndColumnNames [1 2 3 4 5 6]}))))
-
-
-
-
-
