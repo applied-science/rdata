@@ -41,8 +41,13 @@
     (is (= (r->clj keyword (eval-r "list(a=1,b=c(10,20),c='hi!')"))
            {:a [1.0], :b [10.0 20.0], :c ["hi!"]}))))
 
-;; (r->clj (eval-r "table(c('a','b','a','b','a','b','a','b'), c(1,1,2,2,3,3,1,1))"))
+;; java->clj might be trying too hard to keywordize?
+;; (appliedsciencestudio.experiment/java->clj
+;;  (eval-r "list(A=1,B=2,'#123strange ()'=3)"))
+;;=> {:A [1.0], :B [2.0], :#123strange () [3.0]}
 
+;;(r->clj identity (eval-r "table(c('a','b','a','b','a','b','a','b'), c(1,1,2,2,3,3,1,1))"))
+;;
 ;; In R this is:
 ;;   1 2 3
 ;; a 2 1 1
@@ -59,6 +64,11 @@
 ;;  ["2" "b"] 1,
 ;;  ["3" "a"] 1,
 ;;  ["3" "b"] 1}
+
+;; bringing the clojisr code over, we get this:
+;; (appliedsciencestudio.experiment/java->clj
+;;  (eval-r "table(c('a','b','a','b','a','b','a','b'), c(1,1,2,2,3,3,1,1))"))
+;;=>[[2 2 1] [1 1 1]]
 
 ;; these first datasets were taken from https://github.com/reconhub/outbreaks
 (deftest sars-test

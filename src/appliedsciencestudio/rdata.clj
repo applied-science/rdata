@@ -31,40 +31,38 @@
               (partial clojurize-sexp key-fn serializer))
             sexp)
       the-meta)))
-  
+
 (defn clojurize-sexp
   "Recursively unpack a nested set of R sexps into a clojure
   representation."
   [key-fn serializer sexp]
-  (condp = (class sexp)
-    org.renjin.sexp.PairList$Node (apply array-map
-                                         (mapcat #(vector (key-fn (if (= "" %1) (str "appliedsciencestudio.rdata/unnamed-"(serializer)) %1))
-                                                          (clojurize-sexp key-fn serializer %2))
-                                              (.getNames sexp)
-                                              (.values sexp)))
-    org.renjin.sexp.ListVector  (with-meta
-                                  (if (= (class (.getNames sexp)) org.renjin.sexp.Null)
-                                    {}
-                                    (apply array-map                                           
-                                           (mapcat #(vector (key-fn (if (= "" %) (str "appliedsciencestudio.rdata/unnamed-"(serializer)) %))
-                                                            (clojurize-sexp key-fn serializer (.get sexp (str %))))
-                                                   (.getNames sexp))))
-                                  (attributes->metadata key-fn serializer sexp))
-    org.renjin.sexp.IntArrayVector (clojurize-vector key-fn serializer sexp)
-    org.renjin.sexp.IntBufferVector (clojurize-vector key-fn serializer sexp)
-    org.renjin.sexp.DoubleArrayVector (clojurize-vector key-fn serializer sexp)
-    org.renjin.sexp.StringArrayVector (clojurize-vector key-fn serializer sexp)
-    org.renjin.sexp.LogicalArrayVector (clojurize-vector key-fn serializer sexp) ;; XXX
-    org.renjin.sexp.Logical (case (.toString sexp) ;; (.toBooleanStrict sexp)
-                              "TRUE" true
-                              "FALSE" false
-                              "NA" nil)
-    org.renjin.primitives.io.serialization.StringByteArrayVector (mapv identity sexp) ; XXX
-    org.renjin.primitives.sequence.IntSequence (mapv identity sexp) ; XXX
-    ;; primitive type leaf nodes
-    java.lang.Double sexp      
-    java.lang.String sexp
-    java.lang.Integer sexp
+  (condp get (class sexp)
+    #{org.renjin.sexp.PairList$Node} (apply array-map
+                                             (mapcat #(vector (key-fn (if (= "" %1) (str "appliedsciencestudio.rdata/unnamed-"(serializer)) %1))
+                                                              (clojurize-sexp key-fn serializer %2))
+                                                     (.getNames sexp)
+                                                     (.values sexp)))
+    #{org.renjin.sexp.ListVector}  (with-meta
+                                      (if (= (class (.getNames sexp)) org.renjin.sexp.Null)
+                                        {}
+                                        (apply array-map                                           
+                                               (mapcat #(vector (key-fn (if (= "" %) (str "appliedsciencestudio.rdata/unnamed-"(serializer)) %))
+                                                                (clojurize-sexp key-fn serializer (.get sexp (str %))))
+                                                       (.getNames sexp))))
+                                     (attributes->metadata key-fn serializer sexp))
+    #{org.renjin.sexp.IntArrayVector 
+      org.renjin.sexp.IntBufferVector 
+      org.renjin.sexp.DoubleArrayVector 
+      org.renjin.sexp.StringArrayVector 
+      org.renjin.sexp.LogicalArrayVector} (clojurize-vector key-fn serializer sexp) ;; XXX
+    #{org.renjin.sexp.Logical} ({org.renjin.sexp.Logical/TRUE true
+                                 org.renjin.sexp.Logical/FALSE false
+                                 org.renjin.sexp.Logical/NA nil} sexp)
+    #{org.renjin.primitives.io.serialization.StringByteArrayVector
+      org.renjin.primitives.sequence.IntSequence} (mapv identity sexp) ; XXX    
+    #{java.lang.Double ; primitive type leaf nodes
+      java.lang.String
+      java.lang.Integer} sexp
     (class sexp))) ; emit classname if an unmapped class shows up
 ;; TODO  org.renjin.primitives.vector.RowNamesVector
 
