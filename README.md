@@ -30,7 +30,7 @@ depend on non-standard repositories, you must have the key/value pair
 ``` clojure
 :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
             "clojars" {:url "https://clojars.org/repo"}
-            "bedatadriven" {:url "https://nexus.bedatadriven.com/content/groups/public/"}
+            "bedatadriven" {:url "https://nexus.bedatadriven.com/content/groups/public/"}}
 ```
 
 Run the tests:
